@@ -186,12 +186,12 @@ summary(mod_randNUM)$AIC[1]
 
 ### Full model summary with first level interactions
 
-mod_fullNUMHS <- glmmTMB(number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
+mod_fullNUM <- glmmTMB(number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
                                          condylobasal.length.of.host.species + which.side)^2+ (1|id),
                     data = df, na.action = na.fail, REML = FALSE)
 
-summary(mod_fullNUMHS)
-summary(mod_fullNUMHS)$AIC[1]
+summary(mod_fullNUM)
+summary(mod_fullNUM)$AIC[1]
 
 ### Model selection using AIC (fixed effects)
 ### Use ML not REML before running model averaging (Ben Bolker on Cross-Validated)
@@ -199,7 +199,7 @@ summary(mod_fullNUMHS)$AIC[1]
 ### abund_T_randland_dred <- MuMIn::dredge(abund_T_randland, rank = "AIC")
 
 ### Let's susbet to models with an AIC within 2 of the lowest.
-dredNUM <- dredge(mod_fullNUMHS, rank = "AIC")
+dredNUM <- dredge(mod_fullNUM, rank = "AIC")
 dreddelta2NUM <- subset(dredNUM, delta<2)
 
 ### Most parsimonious model
