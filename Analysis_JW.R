@@ -4,12 +4,14 @@
 
 library("readxl")
 df <- read_excel("mesurements_S.nasicola_host-species_max.xlsx", "Sheet5")
+colnames(df)[1] <- "length.of.worm"
 df$sex.of.worm <- as.factor(df$sex.of.worm)
 df$host.species <- as.factor(df$host.species)
 df$sex.of.host <- as.factor(df$sex.of.host)
 df$which.side <- as.factor(df$which.side)
 df$id <- as.factor(df$id)
-
+levels(df$host.species)[levels(df$host.species)=="M.vision"] <- "N.vison"
+df$host.species
 ################################################################################
 library(glmmTMB)
 library(performance)
@@ -26,7 +28,7 @@ library(ggeffects)
 
 ### Check collinearity
 
-mod_nointer <- glmmTMB( lenth.of.worm ~ sex.of.worm + number.of.worms + host.species + sex.of.host + 
+mod_nointer <- glmmTMB( length.of.worm ~ sex.of.worm + number.of.worms + host.species + sex.of.host + 
                    condylobasal.length.of.host.species + which.side + (1|id),
                    data = df, na.action = na.fail)
 check_collinearity(mod_nointer)
@@ -39,11 +41,11 @@ check_collinearity(mod_nointer)
 
 ### Let's put id as random effects and use REML (Zuur et al 2009)
 
-mod_norand <- glmmTMB( lenth.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+mod_norand <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
                           condylobasal.length.of.host.species + which.side)^2,
                         data = df, na.action = na.fail, REML = TRUE)
 
-mod_rand <- glmmTMB( lenth.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+mod_rand <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
                           condylobasal.length.of.host.species + which.side)^2 + (1|id),
                      data = df, na.action = na.fail, REML = TRUE)
 
@@ -53,7 +55,7 @@ summary(mod_rand)$AIC[1]
 
 ### Full model summary with first level interactions
 
-mod_full <- glmmTMB(lenth.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+mod_full <- glmmTMB(length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
                          condylobasal.length.of.host.species + which.side)^2,
                     data = df, na.action = na.fail, REML = FALSE)
 
@@ -68,14 +70,14 @@ summary(mod_full)$AIC[1]
 ### Let's susbet to models with an AIC within 2 of the lowest.
 dred <- dredge(mod_full, rank = "AIC")
 dreddelta2 <- subset(dred, delta<2)
-
+beepr::beep(3)
 ### Most parsimonious model
 mod_parsi <- get.models(dreddelta2, 11)[[1]]
 summary(mod_parsi)
 tab_model(mod_parsi)
 
-mean(df$lenth.of.worm[df$sex.of.worm=="F"])
-mean(df$lenth.of.worm[df$sex.of.worm=="M"])
+mean(df$length.of.worm[df$sex.of.worm=="F"])
+mean(df$length.of.worm[df$sex.of.worm=="M"])
 
 ### The above results hint that there is not one "true" model, so let's try model averaging
 mod_full_avg <- model.avg(dreddelta2, rank="AIC", fit=TRUE)
@@ -88,21 +90,24 @@ mod_full_avg_summary$coef.nmod
 best_plot <- plot_model(mod_parsi, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
                                title = '',
                                axis.title = c("Condylobasal length of host", expression("Predicted length of worm")),
-                               legend.title = "",
+                               legend.title = "Sex of worm",
                                ci.lvl = 0.95, se=TRUE)
 best_plot
+jpeg("Figure1.jpg", width=14, height=8, units="cm", res=600)
 
+best_plot
+dev.off()
 ################################################################################
 ######################## WITH HOST SPECIES #####################################
 ################################################################################
 
 ### Let's put id as random effects and use REML (Zuur et al 2009)
 
-mod_norandHS <- glmmTMB( lenth.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+mod_norandHS <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
                                           host.species + which.side)^2,
                        data = df, na.action = na.fail, REML = TRUE)
 
-mod_randHS <- glmmTMB( lenth.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+mod_randHS <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
                                         host.species + which.side)^2 + (1|id),
                      data = df, na.action = na.fail, REML = TRUE)
 
@@ -112,7 +117,7 @@ summary(mod_randHS)$AIC[1]
 
 ### Full model summary with first level interactions
 
-mod_fullHS <- glmmTMB(lenth.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+mod_fullHS <- glmmTMB(length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
                                        host.species + which.side)^2,
                     data = df, na.action = na.fail, REML = FALSE)
 
@@ -127,14 +132,14 @@ summary(mod_fullHS)$AIC[1]
 ### Let's susbet to models with an AIC within 2 of the lowest.
 dredHS <- dredge(mod_fullHS, rank = "AIC")
 dreddelta2HS <- subset(dredHS, delta<2)
-
+beepr::beep(3)
 ### Most parsimonious model
 mod_parsiHS <- get.models(dreddelta2HS, 1)[[1]]
 summary(mod_parsiHS)
 tab_model(mod_parsiHS)
 
-mean(df$lenth.of.worm[df$sex.of.worm=="F"])
-mean(df$lenth.of.worm[df$sex.of.worm=="M"])
+mean(df$length.of.worm[df$sex.of.worm=="F"])
+mean(df$length.of.worm[df$sex.of.worm=="M"])
 
 ### The above results hint that there is not one "true" model, so let's try model averaging
 mod_full_avgHS <- model.avg(dreddelta2HS, rank="AIC", fit=TRUE)
@@ -147,9 +152,11 @@ mod_full_avg_summary$coef.nmod
 best_plot <- plot_model(mod_parsiHS, type = "pred", terms = c("host.species","sex.of.worm"),
                         title = '',
                         axis.title = c("Host species", expression("Predicted length of worm")),
-                        legend.title = "",
+                        legend.title = "Sex of worm",
                         ci.lvl = 0.95, se=TRUE)
+jpeg("Figure2.jpg", width=14, height=8, units="cm", res=600)
 best_plot
+dev.off()
 
 ################################################################################
 ################################################################################
@@ -159,9 +166,10 @@ best_plot
 
 ### Check collinearity
 
-mod_nointer <- glmmTMB( number.of.worms ~ sex.of.worm + lenth.of.worm + host.species + sex.of.host + 
+mod_nointer <- glmmTMB( number.of.worms ~ sex.of.worm + length.of.worm + host.species + sex.of.host + 
                           condylobasal.length.of.host.species + which.side + (1|id),
-                        data = df, na.action = na.fail)
+                        data = df, na.action = na.fail,
+                        family=poisson(link="log"))
 check_collinearity(mod_nointer)
 #NOTE: as expected, host species and its condylobasal length is highly correlated
 #ACTION: we have to get rid of one -> do with one then the other
@@ -172,13 +180,15 @@ check_collinearity(mod_nointer)
 
 ### Let's put id as random effects and use REML (Zuur et al 2009)
 
-mod_norandNUM <- glmmTMB( number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
+mod_norandNUM <- glmmTMB( number.of.worms ~ (sex.of.worm + length.of.worm + sex.of.host + 
                                           condylobasal.length.of.host.species + which.side)^2,
-                       data = df, na.action = na.fail, REML = TRUE)
+                       data = df, na.action = na.fail, REML = TRUE,
+                       family=poisson(link="log"))
 
-mod_randNUM <- glmmTMB( number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
+mod_randNUM <- glmmTMB( number.of.worms ~ (sex.of.worm + length.of.worm + sex.of.host + 
                                           condylobasal.length.of.host.species + which.side)^2 + (1|id),
-                     data = df, na.action = na.fail, REML = TRUE)
+                     data = df, na.action = na.fail, REML = TRUE,
+                     family=poisson(link="log"))
 
 summary(mod_norandNUM)$AIC[1]
 summary(mod_randNUM)$AIC[1]
@@ -186,12 +196,14 @@ summary(mod_randNUM)$AIC[1]
 
 ### Full model summary with first level interactions
 
-mod_fullNUM <- glmmTMB(number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
+mod_fullNUM <- glmmTMB(number.of.worms ~ (sex.of.worm + length.of.worm + sex.of.host + 
                                          condylobasal.length.of.host.species + which.side)^2+ (1|id),
-                    data = df, na.action = na.fail, REML = FALSE)
+                    data = df, na.action = na.fail, REML = FALSE,
+                    family=poisson(link="log"))
 
 summary(mod_fullNUM)
 summary(mod_fullNUM)$AIC[1]
+check_overdispersion(mod_fullNUM)
 
 ### Model selection using AIC (fixed effects)
 ### Use ML not REML before running model averaging (Ben Bolker on Cross-Validated)
@@ -201,9 +213,9 @@ summary(mod_fullNUM)$AIC[1]
 ### Let's susbet to models with an AIC within 2 of the lowest.
 dredNUM <- dredge(mod_fullNUM, rank = "AIC")
 dreddelta2NUM <- subset(dredNUM, delta<2)
-
+beepr::beep(3)
 ### Most parsimonious model
-mod_parsiNUM <- get.models(dreddelta2NUM, 10)[[1]]
+mod_parsiNUM <- get.models(dreddelta2NUM, 1)[[1]]
 summary(mod_parsiNUM)
 tab_model(mod_parsiNUM)
 
@@ -221,9 +233,12 @@ mod_full_avg_summaryNUM$coef.nmod
 best_plotNUM <- plot_model(mod_parsiNUM, type = "pred", terms = c("sex.of.host","sex.of.worm", "which.side"),
                         title = '',
                         axis.title = c("Sex of host", expression("Predicted number of worms")),
-                        legend.title = "",
+                        legend.title = "Sex of worm",
                         ci.lvl = 0.95, se=TRUE)
 best_plotNUM
+jpeg("Figure3.jpg", width=14, height=8, units="cm", res=600)
+best_plotNUM
+dev.off()
 
 ################################################################################
 ######################## WITH HOST SPECIES #####################################
@@ -231,13 +246,15 @@ best_plotNUM
 
 ### Let's put id as random effects and use REML (Zuur et al 2009)
 
-mod_norandNUMHS <- glmmTMB( number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
+mod_norandNUMHS <- glmmTMB( number.of.worms ~ (sex.of.worm + length.of.worm + sex.of.host + 
                                                host.species + which.side)^2,
-                          data = df, na.action = na.fail, REML = TRUE)
+                          data = df, na.action = na.fail, REML = TRUE,
+                          family=poisson(link="log"))
 
-mod_randNUMHS <- glmmTMB( number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
+mod_randNUMHS <- glmmTMB( number.of.worms ~ (sex.of.worm + length.of.worm + sex.of.host + 
                                              host.species + which.side)^2 + (1|id),
-                        data = df, na.action = na.fail, REML = TRUE)
+                        data = df, na.action = na.fail, REML = TRUE,
+                        family=poisson(link="log"))
 
 summary(mod_norandNUMHS)$AIC[1]
 summary(mod_randNUMHS)$AIC[1]
@@ -245,9 +262,10 @@ summary(mod_randNUMHS)$AIC[1]
 
 ### Full model summary with first level interactions
 
-mod_fullNUMHS <- glmmTMB(number.of.worms ~ (sex.of.worm + lenth.of.worm + sex.of.host + 
+mod_fullNUMHS <- glmmTMB(number.of.worms ~ (sex.of.worm + length.of.worm + sex.of.host + 
                                            host.species + which.side)^2+ (1|id),
-                       data = df, na.action = na.fail, REML = FALSE)
+                       data = df, na.action = na.fail, REML = FALSE,
+                       family=poisson(link="log"))
 
 summary(mod_fullNUMHS)
 summary(mod_fullNUMHS)$AIC[1]
@@ -260,9 +278,9 @@ summary(mod_fullNUMHS)$AIC[1]
 ### Let's susbet to models with an AIC within 2 of the lowest.
 dredNUMHS <- dredge(mod_fullNUMHS, rank = "AIC")
 dreddelta2NUMHS <- subset(dredNUMHS, delta<2)
-
+beepr::beep(3)
 ### Most parsimonious model
-mod_parsiNUMHS <- get.models(dreddelta2NUMHS, 3)[[1]]
+mod_parsiNUMHS <- get.models(dreddelta2NUMHS, 1)[[1]]
 summary(mod_parsiNUMHS)
 tab_model(mod_parsiNUMHS)
 
@@ -277,9 +295,66 @@ mod_full_avg_summaryNUMHS$coefmat.full[,1]
 mod_full_avg_summaryNUMHS$coef.nmod
 
 ### Plotting
-best_plotNUMHS <- plot_model(mod_parsiNUMHS, type = "pred", terms = c("host.species","sex.of.host"),
+best_plotNUMHS <- plot_model(mod_parsiNUMHS, type = "pred", terms = c("host.species","sex.of.host", "which.side"),
                            title = '',
                            axis.title = c("Host species", expression("Predicted number of worms")),
-                           legend.title = "",
+                           legend.title = "Sex of host",
                            ci.lvl = 0.95, se=TRUE)
 best_plotNUMHS
+jpeg("Figure4.jpg", width=14, height=8, units="cm", res=600)
+best_plotNUMHS
+dev.off()
+
+
+################################################################################
+######################## WITH HOST SPECIES #####################################
+################################################################################
+
+mod_ermina <- glmmTMB(length.of.worm ~ (sex.of.worm + condylobasal.length.of.host.species)^2,
+                    data = df[df$host.species=="M.ermina",], na.action = na.fail, REML = FALSE)
+
+tab_model(mod_ermina)
+
+plot_ermina <- plot_model(mod_ermina, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+                          title = '',
+                          axis.title = c("Condylobasal length of host", expression("Predicted length of worms")),
+                          legend.title = "",
+                          ci.lvl = 0.95, se=TRUE)
+plot_ermina
+
+mod_nivalis <- glmmTMB(length.of.worm ~ (sex.of.worm + condylobasal.length.of.host.species)^2,
+                      data = df[df$host.species=="M.nivalis",], na.action = na.fail, REML = FALSE)
+
+tab_model(mod_nivalis)
+
+plot_nivalis <- plot_model(mod_nivalis, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+                           title = '',
+                           axis.title = c("Condylobasal length of host", expression("Predicted length of worms")),
+                           legend.title = "",
+                           ci.lvl = 0.95, se=TRUE)
+plot_nivalis
+
+
+mod_putorius <- glmmTMB(length.of.worm ~ (sex.of.worm + condylobasal.length.of.host.species)^2,
+                      data = df[df$host.species=="M.putorius",], na.action = na.fail, REML = FALSE)
+
+tab_model(mod_putorius)
+
+plot_putorius <- plot_model(mod_putorius, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+                           title = '',
+                           axis.title = c("Condylobasal length of host", expression("Predicted length of worms")),
+                           legend.title = "",
+                           ci.lvl = 0.95, se=TRUE)
+plot_putorius
+
+mod_vision <- glmmTMB(length.of.worm ~ (sex.of.worm + condylobasal.length.of.host.species)^2,
+                      data = df[df$host.species=="M.vision",], na.action = na.fail, REML = FALSE)
+
+tab_model(mod_vision)
+
+plot_vision <- plot_model(mod_vision, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+                            title = '',
+                            axis.title = c("Condylobasal length of host", expression("Predicted length of worms")),
+                            legend.title = "",
+                            ci.lvl = 0.95, se=TRUE)
+plot_vision
