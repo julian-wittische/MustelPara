@@ -20,20 +20,50 @@ library(sjPlot)
 library(ggplot2)
 library(ggeffects)
 
+### Check collinearity
+
+# Condylobasal length of host and host species are highly correlated
+mod_nointer <- glmmTMB( length.of.worm ~ sex.of.worm + number.of.worms + host.species + sex.of.host + 
+                          condylobasal.length.of.host.species + which.side + (1|id),
+                        data = df, na.action = na.fail)
+check_collinearity(mod_nointer)
+
+mod_nointer <- glmmTMB( number.of.worms  ~ sex.of.worm + length.of.worm + host.species + sex.of.host + 
+                          condylobasal.length.of.host.species + which.side + (1|id),
+                        data = df, na.action = na.fail)
+check_collinearity(mod_nointer)
+
+# Length of worms ~ condylobasal length
+mod_nointer <- glmmTMB( length.of.worm ~ sex.of.worm + number.of.worms + sex.of.host + 
+                          condylobasal.length.of.host.species + which.side + (1|id),
+                        data = df, na.action = na.fail)
+check_collinearity(mod_nointer)
+
+# Length of worms ~ host species
+mod_nointer <- glmmTMB( length.of.worm ~ sex.of.worm + number.of.worms + host.species + sex.of.host + 
+                          which.side + (1|id),
+                        data = df, na.action = na.fail)
+check_collinearity(mod_nointer)
+
+# Number of worms ~ condylobasal length
+mod_nointer <- glmmTMB( number.of.worms ~ sex.of.worm + length.of.worm + sex.of.host + 
+                          condylobasal.length.of.host.species + which.side + (1|id),
+                        data = df, na.action = na.fail)
+check_collinearity(mod_nointer)
+
+# Number of worms ~ host species
+mod_nointer <- glmmTMB( number.of.worms ~ sex.of.worm + length.of.worm + host.species + sex.of.host + 
+                          which.side + (1|id),
+                        data = df, na.action = na.fail)
+check_collinearity(mod_nointer)
+#NOTE: as expected, host species and its condylobasal length is highly correlated
+#ACTION: we have to get rid of one -> do with one then the other
+
 ################################################################################
 ################################################################################
 ######################## LENGTH OF WORM ########################################
 ################################################################################
 ################################################################################
-
-### Check collinearity
-
-mod_nointer <- glmmTMB( length.of.worm ~ sex.of.worm + number.of.worms + host.species + sex.of.host + 
-                   condylobasal.length.of.host.species + which.side + (1|id),
-                   data = df, na.action = na.fail)
-check_collinearity(mod_nointer)
-#NOTE: as expected, host species and its condylobasal length is highly correlated
-#ACTION: we have to get rid of one -> do with one then the other
 
 ################################################################################
 ######################## WITH CONDYLOBASAL LENGTH ##############################
@@ -145,8 +175,8 @@ mean(df$length.of.worm[df$sex.of.worm=="M"])
 mod_full_avgHS <- model.avg(dreddelta2HS, rank="AIC", fit=TRUE)
 mod_full_avg_summaryHS <- summary(mod_full_avgHS)
 mod_full_avg_summaryHS
-mod_full_avg_summary$coefmat.full[,1]
-mod_full_avg_summary$coef.nmod
+mod_full_avg_summaryHS$coefmat.full[,1]
+mod_full_avg_summaryHS$coef.nmod
 
 ### Plotting
 best_plot <- plot_model(mod_parsiHS, type = "pred", terms = c("host.species","sex.of.worm"),
@@ -347,14 +377,139 @@ plot_putorius <- plot_model(mod_putorius, type = "pred", terms = c("condylobasal
                            ci.lvl = 0.95, se=TRUE)
 plot_putorius
 
-mod_vision <- glmmTMB(length.of.worm ~ (sex.of.worm + condylobasal.length.of.host.species)^2,
-                      data = df[df$host.species=="M.vision",], na.action = na.fail, REML = FALSE)
+mod_vison <- glmmTMB(length.of.worm ~ (sex.of.worm + condylobasal.length.of.host.species)^2,
+                      data = df[df$host.species=="N.vison",], na.action = na.fail, REML = FALSE)
 
-tab_model(mod_vision)
+tab_model(mod_vison)
 
-plot_vision <- plot_model(mod_vision, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+plot_vison <- plot_model(mod_vison, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
                             title = '',
                             axis.title = c("Condylobasal length of host", expression("Predicted length of worms")),
                             legend.title = "",
                             ci.lvl = 0.95, se=TRUE)
-plot_vision
+plot_vison
+
+################################################################################
+################### REDO MODELS WITHIN SPECIES #################################
+################################################################################
+
+### M. ermina
+ermina <- df[df$host.species=="M.ermina",]
+
+mod_norand_ermina <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                           condylobasal.length.of.host.species + which.side)^2,
+                       data = ermina, na.action = na.fail, REML = TRUE)
+
+mod_rand_ermina <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                         condylobasal.length.of.host.species + which.side)^2 + (1|id),
+                     data = ermina, na.action = na.fail, REML = TRUE)
+
+summary(mod_norand_ermina)$AIC[1]
+summary(mod_rand_ermina)$AIC[1]
+
+# No need to include random effects
+
+mod_ermina_full <- glmmTMB(length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                          condylobasal.length.of.host.species + which.side)^2,
+                      data = ermina, na.action = na.fail, REML = FALSE)
+
+### Let's susbet to models with an AIC within 2 of the lowest.
+dredermina <- dredge(mod_ermina_full, rank = "AIC")
+dreddelta2ermina <- subset(dredermina, delta<2)
+beepr::beep(3)
+### Most parsimonious model
+mod_parsi_ermina <- get.models(dreddelta2ermina, 8)[[1]]
+summary(mod_parsi_ermina)
+tab_model(mod_parsi_ermina)
+
+### M. nivalis
+nivalis <- df[df$host.species=="M.nivalis",]
+
+mod_norand_nivalis <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                                  condylobasal.length.of.host.species + which.side)^2,
+                              data = nivalis, na.action = na.fail, REML = TRUE)
+
+mod_rand_nivalis <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                                condylobasal.length.of.host.species + which.side)^2 + (1|id),
+                            data = nivalis, na.action = na.fail, REML = TRUE)
+
+summary(mod_norand_nivalis)$AIC[1]
+summary(mod_rand_nivalis)$AIC[1]
+
+# No need to include random effects
+
+mod_nivalis_full <- glmmTMB(length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                               condylobasal.length.of.host.species + which.side)^2,
+                           data = nivalis, na.action = na.fail, REML = FALSE)
+
+### Let's susbet to models with an AIC within 2 of the lowest.
+drednivalis <- dredge(mod_nivalis_full, rank = "AIC")
+dreddelta2nivalis <- subset(drednivalis, delta<2)
+beepr::beep(3)
+
+### Most parsimonious model (THERE ARE TO MODELS WITH THE SAME DEGREES OF FREEDOM)
+mod_parsi_nivalis <- get.models(dreddelta2nivalis, 13)[[1]]
+summary(mod_parsi_nivalis)
+tab_model(mod_parsi_nivalis)
+
+mod_parsi_nivalis2 <- get.models(dreddelta2nivalis, 35)[[1]]
+summary(mod_parsi_nivalis2)
+tab_model(mod_parsi_nivalis2)
+
+### M. putorius
+putorius <- df[df$host.species=="M.putorius",]
+
+mod_norand_putorius <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                                  condylobasal.length.of.host.species + which.side)^2,
+                              data = putorius, na.action = na.fail, REML = TRUE)
+
+mod_rand_putorius <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                                condylobasal.length.of.host.species + which.side)^2 + (1|id),
+                            data = putorius, na.action = na.fail, REML = TRUE)
+
+summary(mod_norand_putorius)$AIC[1]
+summary(mod_rand_putorius)$AIC[1]
+
+# No need to include random effects
+
+mod_putorius_full <- glmmTMB(length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                               condylobasal.length.of.host.species + which.side)^2,
+                           data = putorius, na.action = na.fail, REML = FALSE)
+
+### Let's susbet to models with an AIC within 2 of the lowest.
+dredputorius <- dredge(mod_putorius_full, rank = "AIC")
+dreddelta2putorius <- subset(dredputorius, delta<2)
+beepr::beep(3)
+### Most parsimonious model
+mod_parsi_putorius <- get.models(dreddelta2putorius, 1)[[1]]
+summary(mod_parsi_putorius)
+tab_model(mod_parsi_putorius)    
+
+### N. vison
+vison <- df[df$host.species=="N.vison",]
+
+mod_norand_vison <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                                    condylobasal.length.of.host.species + which.side)^2,
+                                data = vison, na.action = na.fail, REML = TRUE)
+
+mod_rand_vison <- glmmTMB( length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                                  condylobasal.length.of.host.species + which.side)^2 + (1|id),
+                              data = vison, na.action = na.fail, REML = TRUE)
+
+summary(mod_norand_vison)$AIC[1]
+summary(mod_rand_vison)$AIC[1]
+
+# No need to include random effects
+
+mod_vison_full <- glmmTMB(length.of.worm ~ (sex.of.worm + number.of.worms + sex.of.host + 
+                                                 condylobasal.length.of.host.species + which.side)^2,
+                             data = vison, na.action = na.fail, REML = FALSE)
+
+### Let's susbet to models with an AIC within 2 of the lowest.
+dredvison <- dredge(mod_vison_full, rank = "AIC")
+dreddelta2vison <- subset(dredvison, delta<2)
+beepr::beep(3)
+### Most parsimonious model
+mod_parsi_vison <- get.models(dreddelta2vison, 1)[[1]]
+summary(mod_parsi_vison)
+tab_model(mod_parsi_vison)    
