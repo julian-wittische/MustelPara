@@ -523,3 +523,27 @@ mod_parsi_vison <- get.models(dreddelta2vison, 1)[[1]]
 summary(mod_parsi_vison)
 tab_model(mod_parsi_vison)
 beepr::beep(1)
+
+### CODE FOR ALAIN: FOR LOOP TO EXTRACT R2
+R2df <- data.frame(marginal=numeric(), conditional=numeric())
+for (i in 1: nrow(dreddelta2)){
+  R2df[i,] <- r.squaredGLMM(get.models(dreddelta2, i)[[1]])
+}
+
+### CODE FOR ALAIN: plotting
+mod_full_avg <- model.avg(dreddelta2, rank="AIC", fit=TRUE)
+mod_full_avg_summary
+
+plot_model(mod_parsi, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+                        title = '',
+                        axis.title = c("Condylobasal length of host", expression("Predicted length of worm")),
+                        legend.title = "Sex of worm",
+                        ci.lvl = 0.95, se=TRUE)
+
+plot_model(mod_full_avg_summary, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+           title = '',
+           axis.title = c("Condylobasal length of host", expression("Predicted length of worm")),
+           legend.title = "Sex of worm",
+           ci.lvl = 0.95, se=TRUE)
+
+
