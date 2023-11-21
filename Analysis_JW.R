@@ -1,6 +1,13 @@
 ################################################################################
-######
+############### ANALYSIS OF MUSTELID PARASITE LENGTH AND NUMBER ################
 ################################################################################
+
+# Author: Julian Wittische
+# Data: November 2023
+
+# /!\ WARNING /!\: when there is no random effects in the Gaussian model, performance::r2()
+# does not work (called by tab_model()). Use glmmTMB::r.squaredGLMM() instead
+# It is being fix by the performance team
 
 library("readxl")
 df <- read_excel("mesurements_S.nasicola_host-species_max.xlsx", "Sheet5")
@@ -48,13 +55,15 @@ check_collinearity(mod_nointer)
 # Number of worms ~ condylobasal length
 mod_nointer <- glmmTMB( number.of.worms ~ sex.of.worm + length.of.worm + sex.of.host + 
                           condylobasal.length.of.host.species + which.side + (1|id),
-                        data = df, na.action = na.fail)
+                        data = df, na.action = na.fail,
+                        family=poisson(link="log"))
 check_collinearity(mod_nointer)
 
 # Number of worms ~ host species
 mod_nointer <- glmmTMB( number.of.worms ~ sex.of.worm + length.of.worm + host.species + sex.of.host + 
                           which.side + (1|id),
-                        data = df, na.action = na.fail)
+                        data = df, na.action = na.fail,
+                        family=poisson(link="log"))
 check_collinearity(mod_nointer)
 #NOTE: as expected, host species and its condylobasal length is highly correlated
 #ACTION: we have to get rid of one -> do with one then the other
@@ -512,4 +521,5 @@ beepr::beep(3)
 ### Most parsimonious model
 mod_parsi_vison <- get.models(dreddelta2vison, 1)[[1]]
 summary(mod_parsi_vison)
-tab_model(mod_parsi_vison)    
+tab_model(mod_parsi_vison)
+beepr::beep(1)
