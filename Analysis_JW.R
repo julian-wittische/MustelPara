@@ -130,12 +130,21 @@ best_plot <- plot_model(mod_parsi, type = "pred", terms = c("condylobasal.length
                                title = '',
                                axis.title = c("Condylobasal length of host", expression("Predicted length of worm")),
                                legend.title = "Sex of worm",
-                               ci.lvl = 0.95, se=TRUE)
+                               ci.lvl = 0.95, se=TRUE) + scale_x_continuous(limits = c(0, 800))
+
 best_plot
 jpeg("Figure1.jpg", width=14, height=8, units="cm", res=600)
 
 best_plot
 dev.off()
+
+intercept_plot <- plot_model(mod_parsi, type = "pred", terms = c("condylobasal.length.of.host.species [0,800]","sex.of.worm"),
+                        title = '',
+                        axis.title = c("Condylobasal length of host", expression("Predicted length of worm")),
+                        legend.title = "Sex of worm",
+                        ci.lvl = 0.95, se=TRUE)
+intercept_plot
+
 ################################################################################
 ######################## WITH HOST SPECIES #####################################
 ################################################################################
