@@ -534,6 +534,9 @@ for (i in 1: nrow(dreddelta2)){
 }
 
 ### CODE FOR ALAIN: plotting model averaging results
+# Coefficients plots
+plot_models(mod_full_avg)
+
 library(parameters)
 library(see)
 
@@ -542,19 +545,28 @@ mod_full_avg_summary
 mod <- model_parameters(mod_full_avg)
 plot(mod)
 
+# NOT TRIED:
 # library(papeR)
 # prettify()
+
+# Prediction plots
+
+plot_model(mod_full_avg_summary, type = "pred", terms = c("condylobasal.length.of.host.species","sex.of.worm"),
+           title = '',
+           axis.title = c("Condylobasal length of host", expression("Predicted length of worms")),
+           legend.title = "",
+           ci.lvl = 0.95, se=TRUE) #No CI, known issue
+
+plot(ggpredict(mod_full_avg, terms = c("condylobasal.length.of.host.species","sex.of.worm"))
 # 
 # library(tidyverse)
 # library(AICcmodavg)
-# best_fit_modavg <- new_data %>%
-#   modavgPred(mod_list, newdata = .) %>%
-#   cbind(new_data) %>%
-#   mutate(type = "best_fit_modavg") %>%
-#   rename(mpg = mod.avg.pred,
-#          lwr = lower.CL,
-#          upr = upper.CL) %>%
-#   select(type, wt, mpg, lwr, upr, uncond.se)
-
+# # create new data with only CBL varying?
+# modavg <- modavgPred(dredelta2, newdata = .)
+# ggplot(modavg,aes(x=CBL, y = mod.avg.pred, group = type,
+#            color = type, ymin = lower.CL, ymax=upper.CL,
+#            fill = type)) +
+# geom_line()
+#ggeffects
 
 
