@@ -558,7 +558,8 @@ plot_model(mod_full_avg_summary, type = "pred", terms = c("condylobasal.length.o
            ci.lvl = 0.95, se=TRUE) #No CI, known issue
 
 plot(ggpredict(mod_full_avg, terms = c("condylobasal.length.of.host.species","sex.of.worm"))
-# 
+
+# NOT TRIED:
 # library(tidyverse)
 # library(AICcmodavg)
 # # create new data with only CBL varying?
