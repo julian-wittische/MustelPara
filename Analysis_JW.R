@@ -593,7 +593,7 @@ wilcox.test(df$condylobasal.length.of.host.species~df$sex.of.host, paired=FALSE,
 
 # Kruskal Wallis H test (generalization of U)
 kruskal.test(df$condylobasal.length.of.host.species~df$host.species)
-# There is a differenc
+# There is a difference so we move on
 
 #Pairwise Mann Whitney
 pairwise.wilcox.test(df$condylobasal.length.of.host.species,df$host.species,
