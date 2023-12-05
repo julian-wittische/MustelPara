@@ -9,6 +9,8 @@
 # does not work (called by tab_model()). Use glmmTMB::r.squaredGLMM() instead
 # It is being fix by the performance team
 
+# If you want to see data on the plot_model plots use argument show.data = TRUE
+
 library("readxl")
 df <- read_excel("mesurements_S.nasicola_host-species_max.xlsx", "Sheet5")
 colnames(df)[1] <- "length.of.worm"
@@ -130,7 +132,7 @@ best_plot <- plot_model(mod_parsi, type = "pred", terms = c("condylobasal.length
                                title = '',
                                axis.title = c("Condylobasal length of host", expression("Predicted length of worm")),
                                legend.title = "Sex of worm",
-                               ci.lvl = 0.95, se=TRUE) + scale_x_continuous(limits = c(0, 800))
+                               ci.lvl = 0.95, se=TRUE, show.data = TRUE)
 
 best_plot
 jpeg("Figure1.jpg", width=14, height=8, units="cm", res=600)
@@ -142,7 +144,7 @@ intercept_plot <- plot_model(mod_parsi, type = "pred", terms = c("condylobasal.l
                         title = '',
                         axis.title = c("Condylobasal length of host", expression("Predicted length of worm")),
                         legend.title = "Sex of worm",
-                        ci.lvl = 0.95, se=TRUE)
+                        ci.lvl = 0.95, se=TRUE) + scale_x_continuous(limits = c(0, 800))
 intercept_plot
 
 ################################################################################
@@ -566,7 +568,7 @@ plot_model(mod_full_avg_summary, type = "pred", terms = c("condylobasal.length.o
            legend.title = "",
            ci.lvl = 0.95, se=TRUE) #No CI, known issue
 
-plot(ggpredict(mod_full_avg, terms = c("condylobasal.length.of.host.species","sex.of.worm"))
+plot(ggpredict(mod_full_avg, terms = c("condylobasal.length.of.host.species","sex.of.worm")))
 
 # NOT TRIED:
 # library(tidyverse)
@@ -579,4 +581,21 @@ plot(ggpredict(mod_full_avg, terms = c("condylobasal.length.of.host.species","se
 # geom_line()
 #ggeffects
 
+###############################################################################################################
+###############################################################################################################
+### CODE FOR ALAIN: 
+# Mann Whitney U test
+# Assumptions are respected
+# We suspect that males are bigger so we set argument alternative to "less"
+# Unpaired Wilcoxon is basically Mann Whitney
+wilcox.test(df$condylobasal.length.of.host.species~df$sex.of.host, paired=FALSE,
+            alternative="less", exact=FALSE)
+
+# Kruskal Wallis H test (generalization of U)
+kruskal.test(df$condylobasal.length.of.host.species~df$host.species)
+# There is a differenc
+
+#Pairwise Mann Whitney
+pairwise.wilcox.test(df$condylobasal.length.of.host.species,df$host.species,
+                     p.adjust.method = "BH", paired=FALSE)
 
