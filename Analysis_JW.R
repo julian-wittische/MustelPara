@@ -597,5 +597,5 @@ kruskal.test(df$condylobasal.length.of.host.species~df$host.species)
 
 #Pairwise Mann Whitney
 pairwise.wilcox.test(df$condylobasal.length.of.host.species,df$host.species,
-                     p.adjust.method = "BH", paired=FALSE)
+                     p.adjust.method = "BH", paired=FALSE, exact=FALSE)
 
